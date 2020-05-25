@@ -1,11 +1,13 @@
 ﻿using AccountManagerAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 namespace AccountManagerAPI.Controllers
@@ -43,11 +45,16 @@ namespace AccountManagerAPI.Controllers
                     new Claim("LastName", user.LastName),
                     new Claim("UserName", user.UserName),
                     new Claim("Email", user.Email),
+                    new Claim("Role",user.UserRole.ToString()),
+                    new Claim("Group",user.UserGroup),
                    };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
 
                     var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                    //var vRsaSecurityKey = new Microsoft.IdentityModel.Tokens.RsaSecurityKey(RSA.Create(2048));
+                    //var vSigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(vRsaSecurityKey, SecurityAlgorithms.RsaSha256Signature);
 
                     var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: signIn);
 

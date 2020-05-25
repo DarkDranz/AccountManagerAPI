@@ -9,6 +9,8 @@ using AccountManagerAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Net.Http.Headers;
 
 namespace AccountManagerAPI.Controllers
 {
@@ -24,18 +26,67 @@ namespace AccountManagerAPI.Controllers
             _context = context;
         }
 
+        //Get Claim from headers
+        public string GetClaim(string token, string claimType)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            var stringClaimValue = securityToken.Claims.First(claim => claim.Type == claimType).Value;
+            return stringClaimValue;
+        }
+
         // GET: api/UserInfos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserInfo>>> GetUserInfo()
         {
-            return await _context.UserInfo.ToListAsync();
+            //Gets the user token and claims
+            var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
+            
+            var roleclaim = GetClaim(jwt, "Role");
+            var groupclaim = GetClaim(jwt, "Group");
+
+            //Get current user id AND infos
+            var userId = Int32.Parse(GetClaim(jwt, "Id"));
+            var LoggeduserInfo = await _context.UserInfo.FindAsync(userId);
+
+            //Create a separate list of all user infos for filtering
+            var userList = _context.UserInfo.ToList();
+            var newUserList = new List<UserInfo>();
+            for (int i=0; i < userList.Count(); i++)
+            {
+                //if normal user, return his/her infos only
+                if (groupclaim.Contains("User") || roleclaim != "0")
+                {
+                    newUserList.Add(LoggeduserInfo);
+                    return newUserList;
+                }
+
+                //else return everything to admin and super users
+                newUserList.Add(userList[i]);
+
+            }
+            return newUserList;
         }
 
         // GET: api/UserInfos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UserInfo>> GetUserInfo(int id)
         {
+            //Gets the user token and claims
+            var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
+
+            var roleclaim = GetClaim(jwt, "Role");
+            var groupclaim = GetClaim(jwt, "Group");
+            var userId = Int32.Parse(GetClaim(jwt, "Id"));
+            // Get the current logged id
+            var LoggeduserInfo = await _context.UserInfo.FindAsync(userId);
             var userInfo = await _context.UserInfo.FindAsync(id);
+            //Return normal user infos if not admin
+            if (groupclaim.Contains("User") || roleclaim != "0" && userId != id)
+            {
+                return LoggeduserInfo;
+            }
 
             if (userInfo == null)
             {
@@ -51,6 +102,19 @@ namespace AccountManagerAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUserInfo(int id, UserInfo userInfo)
         {
+            //Gets the user token and claims
+            var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
+
+            var roleclaim = GetClaim(jwt, "Role");
+            var groupclaim = GetClaim(jwt, "Group");
+            var userId = Int32.Parse(GetClaim(jwt, "Id"));
+
+            // Verifies the user claims through the Tokken before anything
+            if (groupclaim.Contains("User") || roleclaim != "0" && userId != userInfo.UserId)
+            {
+                return Forbid();
+            }
+
             if (id != userInfo.UserId)
             {
                 return BadRequest();
@@ -83,6 +147,17 @@ namespace AccountManagerAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<UserInfo>> PostUserInfo(UserInfo userInfo)
         {
+            //Gets the user token and claims
+            var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
+
+            var roleclaim = GetClaim(jwt, "Role");
+            var groupclaim = GetClaim(jwt, "Group");
+
+            // Verifies the user claims through the Tokken before anything
+            if (groupclaim.Contains("User") || roleclaim != "0")
+            {
+                return Forbid();
+            }
             _context.UserInfo.Add(userInfo);
             await _context.SaveChangesAsync();
 
@@ -93,6 +168,17 @@ namespace AccountManagerAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<UserInfo>> DeleteUserInfo(int id)
         {
+            //Gets the user token and claims
+            var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
+
+            var roleclaim = GetClaim(jwt, "Role");
+            var groupclaim = GetClaim(jwt, "Group");
+            // Verifies the user claims through the Tokken before anything
+            if (groupclaim.Contains("User") || roleclaim != "0")
+            {
+                return Forbid();
+            }
+
             var userInfo = await _context.UserInfo.FindAsync(id);
             if (userInfo == null)
             {
