@@ -35,7 +35,7 @@ namespace AccountManagerAPI.Controllers
             }
         }
 
-        // upload file(s) to server that palce under path: rootDirectory/subDirectory
+        // upload file(s) to server that place under path: rootDirectory/subDirectory
         [HttpPost("upload")]
         public IActionResult UploadFile([FromForm(Name = "files")] List<IFormFile> files, string subDirectory)
         {

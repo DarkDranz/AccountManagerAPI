@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Net.Http.Headers;
 
 namespace AccountManagerAPI.Services
 {
@@ -13,8 +14,8 @@ namespace AccountManagerAPI.Services
 
         public void SaveFile(List<IFormFile> files, string subDirectory)
         {
-            subDirectory = subDirectory ?? string.Empty;
-            var target = Path.Combine("D:\\webroot\\", subDirectory);
+            subDirectory ??= string.Empty;
+            var target = Path.Combine("C:\\webroot\\", "RecievedFiles");
 
             Directory.CreateDirectory(target);
 
@@ -33,7 +34,7 @@ namespace AccountManagerAPI.Services
         {
             var zipName = $"archive-{DateTime.Now.ToString("yyyy_MM_dd-HH_mm_ss")}.zip";
 
-            var files = Directory.GetFiles(Path.Combine("D:\\webroot\\", subDirectory)).ToList();
+            var files = Directory.GetFiles(Path.Combine("C:\\webroot\\", subDirectory)).ToList();
 
             using (var memoryStream = new MemoryStream())
             {

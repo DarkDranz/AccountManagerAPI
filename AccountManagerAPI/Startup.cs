@@ -21,6 +21,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
+using AccountManagerAPI.Services;
 using Microsoft.AspNetCore.Http;
 
 namespace AccountManagerAPI
@@ -41,6 +42,7 @@ namespace AccountManagerAPI
             services.AddDbContextPool<AccountDbContext>(options => options.UseSqlServer(connection));
             services.AddControllers();
             IdentityModelEventSource.ShowPII = true;
+            services.AddScoped<IFileService, IFileService>();
             services.Configure<FormOptions>(o => {
                 o.ValueLengthLimit = int.MaxValue;
                 o.MultipartBodyLengthLimit = int.MaxValue;
