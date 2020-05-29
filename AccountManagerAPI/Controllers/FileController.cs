@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using AccountManagerAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace AccountManagerAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class FileController : ControllerBase
@@ -18,6 +22,18 @@ namespace AccountManagerAPI.Controllers
         {
             _fileService = fileService;
         }
+
+        //Get Claim from headers
+        public string GetClaim(string token, string claimType)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            var stringClaimValue = securityToken.Claims.First(claim => claim.Type == claimType).Value;
+
+            return stringClaimValue;
+        }
+
 
         // download file(s) to client according path: rootDirectory/subDirectory with single zip file
         [HttpGet("Download/{subDirectory}")]
@@ -39,9 +55,15 @@ namespace AccountManagerAPI.Controllers
         [HttpPost("upload")]
         public IActionResult UploadFile([FromForm(Name = "files")] List<IFormFile> files, string subDirectory)
         {
+            //Gets the user token and claims
+            var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
+
+            var usernameClaim = GetClaim(jwt, "UserName");
+            var userIdlaim = GetClaim(jwt, "Id");
+
             try
             {
-                _fileService.SaveFile(files, subDirectory);
+                _fileService.SaveFile(files, subDirectory, usernameClaim, userIdlaim);
 
                 return Ok(new { files.Count, Size = IFileService.SizeConverter(files.Sum(f => f.Length)) });
             }

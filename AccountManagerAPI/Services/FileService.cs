@@ -12,17 +12,20 @@ namespace AccountManagerAPI.Services
     public class IFileService
     {
 
-        public void SaveFile(List<IFormFile> files, string subDirectory)
+        public void SaveFile(List<IFormFile> files, string subDirectory, string username, string userid)
         {
             subDirectory ??= string.Empty;
-            var target = Path.Combine("C:\\webroot\\", "RecievedFiles");
 
-            Directory.CreateDirectory(target);
+            var target = Path.Combine("C:\\webroot\\", "RecievedFiles");
+            var userSubDirectory = Path.Combine(target, userid + username);
+
+            Directory.CreateDirectory(userSubDirectory);
 
             files.ForEach(async file =>
             {
                 if (file.Length <= 0) return;
-                var filePath = Path.Combine(target, file.FileName);
+                var fullFilename = userid + "_" + username + "_" + file.FileName;
+                var filePath = Path.Combine(userSubDirectory, fullFilename);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
