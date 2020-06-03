@@ -19,6 +19,7 @@ namespace AccountManagerAPI.Migrations
                     Email = table.Column<string>(unicode: false, maxLength: 50, nullable: false),
                     UserRole = table.Column<int>(nullable: false),
                     UserGroup = table.Column<string>(unicode: false, maxLength: 30, nullable: false),
+                    UserOwnerID = table.Column<string>(unicode: false, maxLength: 30, nullable: true),
                     Password = table.Column<string>(unicode: false, maxLength: 20, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "(getdate())")
                 },

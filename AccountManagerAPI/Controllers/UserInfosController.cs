@@ -45,6 +45,7 @@ namespace AccountManagerAPI.Controllers
             
             var roleclaim = GetClaim(jwt, "Role");
             var groupclaim = GetClaim(jwt, "Group");
+            var Ownerclaim = GetClaim(jwt, "OwnerID");
 
             //Get current user id AND infos
             var userId = Int32.Parse(GetClaim(jwt, "Id"));
@@ -60,6 +61,12 @@ namespace AccountManagerAPI.Controllers
                 {
                     newUserList.Add(LoggeduserInfo);
                     return newUserList;
+                }
+
+                if (userList[i].UserOwnerId != null && userList[i].UserOwnerId == LoggeduserInfo.UserId.ToString() && roleclaim == "1")
+                {
+                    newUserList.Add(userList[i]);
+                    continue;
                 }
 
                 //else return everything to admin and super users
@@ -108,9 +115,10 @@ namespace AccountManagerAPI.Controllers
             var roleclaim = GetClaim(jwt, "Role");
             var groupclaim = GetClaim(jwt, "Group");
             var userId = Int32.Parse(GetClaim(jwt, "Id"));
+            var ownerId = GetClaim(jwt, "OwnerID");
 
             // Verifies the user claims through the Tokken before anything
-            if (groupclaim.Contains("User") || roleclaim != "0" && userId != userInfo.UserId)
+            if (roleclaim != "1" || roleclaim != "0" && userId != userInfo.UserId)
             {
                 return Forbid();
             }
@@ -120,6 +128,13 @@ namespace AccountManagerAPI.Controllers
                 return BadRequest();
             }
 
+            if (roleclaim != "0")
+            {
+                userInfo.UserOwnerId = ownerId;
+                userInfo.UserRole = Int32.Parse(roleclaim);
+                userInfo.UserGroup = groupclaim;
+                userInfo.UserId = userId;
+            }
             _context.Entry(userInfo).State = EntityState.Modified;
 
             try
@@ -152,12 +167,15 @@ namespace AccountManagerAPI.Controllers
 
             var roleclaim = GetClaim(jwt, "Role");
             var groupclaim = GetClaim(jwt, "Group");
+            var userId = Int32.Parse(GetClaim(jwt, "Id"));
 
             // Verifies the user claims through the Tokken before anything
-            if (groupclaim.Contains("User") || roleclaim != "0")
+            if (roleclaim != "1" || roleclaim != "0")
             {
                 return Forbid();
             }
+
+            userInfo.UserOwnerId = userId.ToString();
             _context.UserInfo.Add(userInfo);
             await _context.SaveChangesAsync();
 

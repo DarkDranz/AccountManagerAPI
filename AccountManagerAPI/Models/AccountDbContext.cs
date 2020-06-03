@@ -52,6 +52,10 @@ namespace AccountManagerAPI.Models
                     .HasMaxLength(30)
                     .IsUnicode(false);
 
+                entity.Property(e => e.UserOwnerId)
+                    .HasMaxLength(30)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.UserName)
                     .IsRequired()
                     .HasMaxLength(30)

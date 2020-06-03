@@ -12,6 +12,7 @@ namespace AccountManagerAPI.Models
         public string Email { get; set; }
         public int UserRole { get; set; }
         public string UserGroup { get; set; }
+        public string  UserOwnerId { get; set; }
         public string Password { get; set; }
         public DateTime CreatedDate { get; set; }
     }

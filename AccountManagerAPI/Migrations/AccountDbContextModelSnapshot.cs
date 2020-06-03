@@ -70,6 +70,12 @@ namespace AccountManagerAPI.Migrations
                     b.Property<int>("UserRole")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserOwnerID")
+                        .HasColumnType("varchar(30)")
+                        .HasMaxLength(30)
+                        .IsUnicode(false);
+
+
                     b.HasKey("UserId")
                         .HasName("PK__UserInfo__1788CC4CE0052054");
 

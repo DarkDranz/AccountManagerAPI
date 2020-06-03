@@ -36,18 +36,40 @@ namespace AccountManagerAPI.Controllers
                 if (user != null)
                 {
                     //create claims details based on the user information
-                    var claims = new[] {
-                    new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                    new Claim("Id", user.UserId.ToString()),
-                    new Claim("FirstName", user.FirstName),
-                    new Claim("LastName", user.LastName),
-                    new Claim("UserName", user.UserName),
-                    new Claim("Email", user.Email),
-                    new Claim("Role",user.UserRole.ToString()),
-                    new Claim("Group",user.UserGroup),
-                   };
+                    Claim[] claims;
+                    if (user.UserRole == 0 || user.UserRole == 1)
+                    {
+                        claims = new[] {
+                            new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+                            new Claim("Id", user.UserId.ToString()),
+                            new Claim("FirstName", user.FirstName),
+                            new Claim("LastName", user.LastName),
+                            new Claim("UserName", user.UserName),
+                            new Claim("Email", user.Email),
+                            new Claim("Role",user.UserRole.ToString()),
+                            new Claim("Group",user.UserGroup),
+                        };
+                    }
+                    else
+                    {
+                        claims = new[] {
+                            new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+                            new Claim("Id", user.UserId.ToString()),
+                            new Claim("FirstName", user.FirstName),
+                            new Claim("LastName", user.LastName),
+                            new Claim("UserName", user.UserName),
+                            new Claim("Email", user.Email),
+                            new Claim("Role",user.UserRole.ToString()),
+                            new Claim("OwnerID",user.UserOwnerId.ToString()),
+                            new Claim("Group",user.UserGroup),
+                        };
+                    }
+                    
+                        
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
 

@@ -26,10 +26,10 @@ namespace AccountManagerAPI.Services
                 if (file.Length <= 0) return;
                 var fullFilename = userid + "_" + username + "_" + file.FileName;
                 var filePath = Path.Combine(userSubDirectory, fullFilename);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
+                var stream = new FileStream(filePath, FileMode.Create);
+                
                     await file.CopyToAsync(stream);
-                }
+                
             });
         }
 
