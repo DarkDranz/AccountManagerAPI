@@ -32,7 +32,7 @@ namespace AccountManagerAPI.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
 
-            var stringClaimValue = securityToken.Claims.First(claim => claim.Type == claimType).Value;
+            var stringClaimValue = securityToken.Claims.FirstOrDefault(claim => claim.Type == claimType).Value;
             return stringClaimValue;
         }
 
@@ -42,13 +42,16 @@ namespace AccountManagerAPI.Controllers
         {
             //Gets the user token and claims
             var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
-            
+            var userId = Int32.Parse(GetClaim(jwt, "Id"));
             var roleclaim = GetClaim(jwt, "Role");
             var groupclaim = GetClaim(jwt, "Group");
-            var Ownerclaim = GetClaim(jwt, "OwnerID");
+           /* if (roleclaim != "1" || roleclaim!="0")
+            {
+                var Ownerclaim = GetClaim(jwt, "OwnerID");
+            }*/
 
             //Get current user id AND infos
-            var userId = Int32.Parse(GetClaim(jwt, "Id"));
+            
             var LoggeduserInfo = await _context.UserInfo.FindAsync(userId);
 
             //Create a separate list of all user infos for filtering
@@ -57,20 +60,21 @@ namespace AccountManagerAPI.Controllers
             for (int i=0; i < userList.Count(); i++)
             {
                 //if normal user, return his/her infos only
-                if (groupclaim.Contains("User") || roleclaim != "0")
+                if (!roleclaim.Equals("0")  && !roleclaim.Equals("1"))
                 {
                     newUserList.Add(LoggeduserInfo);
                     return newUserList;
                 }
 
-                if (userList[i].UserOwnerId != null && userList[i].UserOwnerId == LoggeduserInfo.UserId.ToString() && roleclaim == "1")
+                if (roleclaim.Equals("0"))
                 {
-                    newUserList.Add(userList[i]);
-                    continue;
+                    return userList;
                 }
 
-                //else return everything to admin and super users
-                newUserList.Add(userList[i]);
+                if (userList[i].UserOwnerId == LoggeduserInfo.UserId.ToString() && roleclaim == "1")
+                {
+                    newUserList.Add(userList[i]);
+                }
 
             }
             return newUserList;
@@ -118,7 +122,7 @@ namespace AccountManagerAPI.Controllers
             var ownerId = GetClaim(jwt, "OwnerID");
 
             // Verifies the user claims through the Tokken before anything
-            if (roleclaim != "1" || roleclaim != "0" && userId != userInfo.UserId)
+            if (roleclaim != "1" && roleclaim != "0" && userId != userInfo.UserId)
             {
                 return Forbid();
             }
@@ -166,11 +170,10 @@ namespace AccountManagerAPI.Controllers
             var jwt = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", string.Empty);
 
             var roleclaim = GetClaim(jwt, "Role");
-            var groupclaim = GetClaim(jwt, "Group");
             var userId = Int32.Parse(GetClaim(jwt, "Id"));
 
             // Verifies the user claims through the Tokken before anything
-            if (roleclaim != "1" || roleclaim != "0")
+           if (roleclaim != "1" && roleclaim != "0")
             {
                 return Forbid();
             }

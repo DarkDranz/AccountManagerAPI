@@ -64,7 +64,7 @@ namespace AccountManagerAPI.Controllers
                             new Claim("UserName", user.UserName),
                             new Claim("Email", user.Email),
                             new Claim("Role",user.UserRole.ToString()),
-                            new Claim("OwnerID",user.UserOwnerId.ToString()),
+                            new Claim("OwnerID",user.UserOwnerId),
                             new Claim("Group",user.UserGroup),
                         };
                     }
